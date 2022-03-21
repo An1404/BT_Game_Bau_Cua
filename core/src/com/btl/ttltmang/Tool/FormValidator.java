@@ -68,7 +68,7 @@ public class FormValidator extends VisWindow {
 
         setColor(Color.YELLOW);
         pack();
-        setSize(Main.APP_WIDTH/4,Main.APP_HEIGHT/4);
+        setSize(Main.APP_WIDTH/3,Main.APP_HEIGHT/3);
     }
 
 }

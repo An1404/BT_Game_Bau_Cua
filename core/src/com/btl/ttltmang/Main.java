@@ -104,6 +104,7 @@ public class Main extends Game {
 		manager.load("room/cho.png",Texture.class);
 		manager.load("sound/win.mp3", Sound.class);
 		manager.load("room/bg_thong_tin.png",Texture.class);
+		manager.load("sound/music_bg_room.mp3", Music.class);
 
 
 	}

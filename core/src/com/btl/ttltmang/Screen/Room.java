@@ -58,6 +58,7 @@ public class Room extends AbstractScreen {
     public  Array<Label> lblCountCoin;
     private final int[] arrCoin;
     private int[][] arrTextureWin;
+    private  Music music_bg;
     //chat
     private final Table tableChat;
     private TextButton send_button;
@@ -201,6 +202,10 @@ public class Room extends AbstractScreen {
         tableThongTin.setBackground(new TextureRegionDrawable(new TextureRegion(Main.manager.get("room/bg_thong_tin.png", Texture.class))));
         tableThongTin.add(message_ThongTin).expand().fillX().top().left();
         ktMang = 0;
+
+        music_bg  = Main.manager.get("sound/music_bg_room.mp3", Music.class);
+        music_bg.setLooping(true);
+        music_bg.play();
 
 
     }
@@ -461,7 +466,7 @@ public class Room extends AbstractScreen {
 
 
         //kt lỗi mạng
-        new HttpManager();
+        /*new HttpManager();
         if(HttpManager.LOI==1){
             showToast("Please check the internet again");
 
@@ -492,7 +497,7 @@ public class Room extends AbstractScreen {
 
             return;
 
-        }
+        }*/
         createRoom();
         //xu lý time
         if(30-TIME >20 ){
@@ -733,6 +738,7 @@ public class Room extends AbstractScreen {
         stage.clear();
         playerInRoom.clear();
         tableChat.clear();
+        music_bg.stop();
 
 
     }
@@ -1173,11 +1179,11 @@ public class Room extends AbstractScreen {
     }
 
     private void showXucXac() {
+
         game.batch.setProjectionMatrix(camera.combined);
+
         if(arrXX.size ==3){
-            game.batch.draw(arrTextureXX.get(arrXX.get(0)),Main.APP_WIDTH / 2 - 100,550,100,100);
-            game.batch.draw(arrTextureXX.get(arrXX.get(1)),Main.APP_WIDTH / 2 +20,550,100,100);
-            game.batch.draw(arrTextureXX.get(arrXX.get(2)),Main.APP_WIDTH / 2 - 40,490,100,100);
+
            // Gdx.app.log("WIIn",tienCuoc[5]+"");
             //tính tiền win
            if(arrXX.get(0) == arrXX.get(1)){
@@ -1218,6 +1224,14 @@ public class Room extends AbstractScreen {
                tienAn+=tienCuoc[i];
 
            }
+            if(EVENT!=1){
+                game.batch.draw(arrTextureXX.get(arrXX.get(0)),Main.APP_WIDTH / 2 - 100,550,100,100);
+                game.batch.draw(arrTextureXX.get(arrXX.get(1)),Main.APP_WIDTH / 2 +20,550,100,100);
+                game.batch.draw(arrTextureXX.get(arrXX.get(2)),Main.APP_WIDTH / 2 - 40,490,100,100);
+            }
+
+
+
         }
 
 
