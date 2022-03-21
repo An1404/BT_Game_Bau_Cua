@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Game Bầu Cua</string>
+    <string name="gioi_thieu">
+       "GIỚI THIỆU\n" +
+               <b>1</b> "         Trò chơi sử dụng bát và 3 viên xúc xắc in hình 6 linh vật: bầu, cua, cá, tôm, gà, nai.\n" +
+                "        2 Nhà cái sẽ đặt 3 viên xúc xắc vào bát đậy kín và lắc mạnh.\n" +
+                "        3 Nhà chơi sẽ chọn mức cược đặt tiền và 1 ô hoặc nhiều ô linh vật  mình thích mà không bị giới hạn.\n" +
+                "        LUẬT TÍNH TIỀN\n"+
+                "        1 Trúng 1 linh vật x1 tiền cược.\n" +
+                "        2 Trúng 2 linh vật x2 tiền cược.\n" +
+                "        3 Trúng 3 linh vật x3 tiền cược."
+
+    </string>
+
+</resources>
