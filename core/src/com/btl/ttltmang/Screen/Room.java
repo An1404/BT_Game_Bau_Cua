@@ -790,29 +790,59 @@ public class Room extends AbstractScreen {
         if (playerInRoom.containsKey(2) && lblNameOther[1] == null) {
             lblNameOther[1] = new Label(playerInRoom.get(2).getName(), font);
             lblNameOther[1].setPosition(x + 50 - lblNameOther[1].getWidth() / 2, y - 30 + 150);
+            //
+            //coin
+            lblCoinOther[1] = new Label(chuyeDoiTien(playerInRoom.get(2).getCoin()),font);
+            lblCoinOther[1].setPosition(x + 50 - lblCoinOther[0].getWidth() / 2, y +98);
+
+            stage.addActor(lblCoinOther[1]);
             stage.addActor(lblNameOther[1]);
         }
         if (playerInRoom.containsKey(3) && lblNameOther[2] == null) {
             lblNameOther[2] = new Label(playerInRoom.get(3).getName(), font);
             lblNameOther[2].setPosition(x + 50 - lblNameOther[2].getWidth() / 2, y - 30 + 300);
+            //
+            //coin
+            lblCoinOther[2] = new Label(chuyeDoiTien(playerInRoom.get(3).getCoin()),font);
+            lblCoinOther[2].setPosition(x + 50 - lblCoinOther[0].getWidth() / 2, y +248);
+
+            stage.addActor(lblCoinOther[2]);
             stage.addActor(lblNameOther[2]);
         }
         if (playerInRoom.containsKey(4) && lblNameOther[3] == null) {
             x = Main.APP_WIDTH - 105;
             lblNameOther[3] = new Label(playerInRoom.get(4).getName(), font);
             lblNameOther[3].setPosition(x + 50 - lblNameOther[3].getWidth() / 2, y - 30);
+            //
+            //coin
+            lblCoinOther[3] = new Label(chuyeDoiTien(playerInRoom.get(4).getCoin()),font);
+            lblCoinOther[3].setPosition(x + 50 - lblCoinOther[0].getWidth() / 2, y -52);
+            //
+            stage.addActor(lblCoinOther[3]);
             stage.addActor(lblNameOther[3]);
         }
         if (playerInRoom.containsKey(5) && lblNameOther[4] == null) {
             x = Main.APP_WIDTH - 105;
             lblNameOther[4] = new Label(playerInRoom.get(5).getName(), font);
             lblNameOther[4].setPosition(x + 50 - lblNameOther[4].getWidth() / 2, y - 30 + 150);
+            //
+            //coin
+            lblCoinOther[4] = new Label(chuyeDoiTien(playerInRoom.get(5).getCoin()),font);
+            lblCoinOther[4].setPosition(x + 50 - lblCoinOther[0].getWidth() / 2, y +98);
+            //
+            stage.addActor(lblCoinOther[4]);
             stage.addActor(lblNameOther[4]);
         }
         if (playerInRoom.containsKey(6) && lblNameOther[5] == null) {
             x = Main.APP_WIDTH - 105;
             lblNameOther[5] = new Label(playerInRoom.get(6).getName(), font);
             lblNameOther[5].setPosition(x + 50 - lblNameOther[5].getWidth() / 2, y - 30 + 300);
+            //
+            //coin
+            lblCoinOther[5] = new Label(chuyeDoiTien(playerInRoom.get(6).getCoin()),font);
+            lblCoinOther[5].setPosition(x + 50 - lblCoinOther[0].getWidth() / 2, y - 248);
+            //
+            stage.addActor(lblCoinOther[5]);
             stage.addActor(lblNameOther[5]);
         }
     }
@@ -878,30 +908,49 @@ public class Room extends AbstractScreen {
             if (player[1] && id.equals(playerInRoom.get(2).getId())) {
                 lblNameOther[1].remove();
                 lblNameOther[1] = null;
+                //
+                //coin
+                lblCoinOther[1].remove();
+                lblCoinOther[1] = null;
                 player[1] = false;
                 playerInRoom.remove(2);
             }
             if (player[2] && id.equals(playerInRoom.get(3).getId())) {
                 lblNameOther[2].remove();
                 lblNameOther[2] = null;
+                //
+                //coin
+                lblCoinOther[2].remove();
+                lblCoinOther[2] = null;
                 player[2] = false;
                 playerInRoom.remove(3);
             }
             if (player[3] && id.equals(playerInRoom.get(4).getId())) {
                 lblNameOther[3].remove();
                 lblNameOther[3] = null;
+                //
+                //coin
+                lblCoinOther[3].remove();
+                lblCoinOther[3] = null;
                 player[3] = false;
                 playerInRoom.remove(4);
             }
             if (player[4] && id.equals(playerInRoom.get(5).getId())) {
                 lblNameOther[4].remove();
                 lblNameOther[4] = null;
+                //
+                //coin
+                lblCoinOther[4].remove();
+                lblCoinOther[4] = null;
                 player[4] = false;
                 playerInRoom.remove(5);
             }
             if (player[5] && id.equals(playerInRoom.get(6).getId())) {
                 lblNameOther[5].remove();
                 lblNameOther[5] = null;
+                //coin
+                lblCoinOther[5].remove();
+                lblCoinOther[5] = null;
                 player[5] = false;
                 playerInRoom.remove(6);
             }
