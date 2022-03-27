@@ -49,13 +49,39 @@ public class Main extends Game {
 
 	private void loadResources() {
 		manager.load("bg_sanh.jpg",Texture.class);
+		manager.load("doi_avt.png",Texture.class);
+		manager.load("khung_doi_avt.png",Texture.class);
+		manager.load("btn_exit.png",Texture.class);
 		manager.load("btnLogin/bg.jpg",Texture.class);
 		manager.load("btnLogin/logo_baucua.png",Texture.class);
 		manager.load("btnLogin/btnPlay.png",Texture.class);
 		manager.load("btnLogin/btnPlayOn.png",Texture.class);
 		manager.load("btnLogin/btnExit.png",Texture.class);
 		manager.load("btnLogin/btnExitOn.png",Texture.class);
-		manager.load("avt.png",Texture.class);
+		manager.load("avatar/avt.png",Texture.class);
+		manager.load("avatar/avt2.png",Texture.class);
+		manager.load("avatar/avt3.png",Texture.class);
+		manager.load("avatar/avt4.png",Texture.class);
+		manager.load("avatar/avt5.png",Texture.class);
+		manager.load("avatar/avt6.png",Texture.class);
+		manager.load("avatar/avt7.png",Texture.class);
+		manager.load("avatar/avt8.png",Texture.class);
+		manager.load("avatar/avt_50.png",Texture.class);
+		manager.load("avatar/avt_checked.png",Texture.class);
+		manager.load("avatar/avt2_50.png",Texture.class);
+		manager.load("avatar/avt2_checked.png",Texture.class);
+		manager.load("avatar/avt3_50.png",Texture.class);
+		manager.load("avatar/avt3_checked.png",Texture.class);
+		manager.load("avatar/avt4_50.png",Texture.class);
+		manager.load("avatar/avt4_checked.png",Texture.class);
+		manager.load("avatar/avt5_50.png",Texture.class);
+		manager.load("avatar/avt5_checked.png",Texture.class);
+		manager.load("avatar/avt6_50.png",Texture.class);
+		manager.load("avatar/avt6_checked.png",Texture.class);
+		manager.load("avatar/avt7_50.png",Texture.class);
+		manager.load("avatar/avt7_checked.png",Texture.class);
+		manager.load("avatar/avt8_50.png",Texture.class);
+		manager.load("avatar/avt8_checked.png",Texture.class);
 		manager.load("imageLobby/khung.png",Texture.class);
 		manager.load("room/board.jpg",Texture.class);
 		manager.load("room/btnBack.png",Texture.class);
@@ -105,6 +131,7 @@ public class Main extends Game {
 		manager.load("sound/win.mp3", Sound.class);
 		manager.load("room/bg_thong_tin.png",Texture.class);
 		manager.load("sound/music_bg_room.mp3", Music.class);
+		manager.load("sound/sound_dat_coin.mp3", Sound.class);
 
 
 	}

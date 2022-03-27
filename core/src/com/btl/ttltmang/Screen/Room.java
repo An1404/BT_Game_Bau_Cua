@@ -45,6 +45,8 @@ public class Room extends AbstractScreen {
     public static int EVENT = 0;
     //tạo giao diện
     private final Label lblCoin;
+    private final Label  lblName;
+    private  final Label  lblRoom;
     private final boolean[] dk_click_coin;
     private Label[] lblNameOther;
     public static Label[] lblCoinOther;
@@ -83,7 +85,7 @@ public class Room extends AbstractScreen {
 
     //mảng hiện xx
     private Array<Texture> arrTextureXX;
-    private Array<Integer> arrXX;
+    private Array<Integer> arrXX= new Array<>();
     private boolean tgChoi = false;
 
     //tien cược
@@ -92,7 +94,9 @@ public class Room extends AbstractScreen {
     //kt mang
     private float ktMang;
     //
-    private String idLap;
+    private String idLapJoin;
+    private String idLapDelete;
+
 
     public Room(Main game) {
         super(game);
@@ -103,24 +107,29 @@ public class Room extends AbstractScreen {
         player = new boolean[6];
         //create you
         Label.LabelStyle font = new Label.LabelStyle(Main.myFont, Color.WHITE);
-        Label lblName = new Label(PlayGame.currentPlayer.getName(), font);// PlayGame.currentPlayer.getName()
+        lblName = new Label(PlayGame.currentPlayer.getName(), font);// PlayGame.currentPlayer.getName()
         lblName.setPosition(300 - lblName.getWidth() / 2, 60);
         lblCoin = new Label(PlayGame.currentPlayer.getCoin() + "", font);
         lblCoin.setPosition(300 - lblCoin.getWidth() / 2, 10);
-        Label lblRoom = new Label("ROOM: " + PlayGame.currentPlayer.getRoom(), font);// PlayGame.currentPlayer.getRoom()
+        lblRoom = new Label("ROOM: " + PlayGame.currentPlayer.getRoom(), font);// PlayGame.currentPlayer.getRoom()
         lblRoom.setPosition(Main.APP_WIDTH - 320, Main.APP_HEIGHT - 40);
         stage.addActor(lblRoom);
         stage.addActor(lblCoin);
         stage.addActor(lblName);
+        addLabel();
+
         // listen event to server
         ConfigSocket();
         //lấy id người trong phòng nếu có
         PlayGame.socket.emit("getRoomActive", "room" + PlayGame.currentPlayer.getRoom());
+
         //create chat
         tableChat = new Table();
         tableChat.setFillParent(true);
         tableChat.setBackground(new TextureRegionDrawable(new TextureRegion(Main.manager.get("room/bg_room_chat.png", Texture.class))));
         buildChatRoomTable();
+
+
         //progressbar
         ProgressBar.ProgressBarStyle progressBarStyle = new ProgressBar.ProgressBarStyle();
         Pixmap pixmap = new Pixmap(100, 20, Pixmap.Format.RGBA8888);
@@ -156,6 +165,8 @@ public class Room extends AbstractScreen {
         lblTime.setPosition(Main.APP_WIDTH/2 -lblTime.getWidth()/2, 395);
         stage.addActor(lblTime);
         bar.setVisible(false);
+
+
         //toast
         factory = new Toast.ToastFactory.Builder()
                     .font(Main.myFont_24)
@@ -170,9 +181,7 @@ public class Room extends AbstractScreen {
         for(int i =0;i<lblCountCoin.size;i++){
             stage.addActor(lblCountCoin.get(i));
         }
-        //label name and coin player in room
-        lblNameOther = new Label[6];
-        lblCoinOther = new Label[6];
+
         //coin
         arrCoin = new int[6];
         arrCoin[0]=10000;
@@ -274,6 +283,7 @@ public class Room extends AbstractScreen {
 
 
 
+
     }
 
     private void setPositionLabelCountCoin(){
@@ -290,6 +300,7 @@ public class Room extends AbstractScreen {
     @Override
     public void show() {
         super.show();
+
     }
 
     private void ConfigSocket() {
@@ -297,32 +308,52 @@ public class Room extends AbstractScreen {
             @Override
             public void call(Object... args) {
                 JSONObject data = (JSONObject) args[0];
+
                 try {
 
+
                     String _id = data.getString("id");
-                    if(_id.equals(idLap))
+                    if(_id.equals(idLapJoin))
                         return;
+
+                   // Gdx.app.log("SIZEE",playerInRoom.size()+"");
+
 
                     /*if(_id.equals(PlayGame.currentPlayer.getId()))
                         return;*/
                     int vt = -1;
                     for (int i = 0; i < player.length; i++) {
+
                         if (!player[i]) {
+
                             if (  i >0&& playerInRoom.get(i)!=null &&playerInRoom.get(i).getId().equals(_id) ) {
-                                break;
+                                //Gdx.app.log("SIZE GET VAO", _id);
+                                return;
                             }
 
                             vt = i + 1;
+
                             player[i] = true;
-                            Gdx.app.log("SIZE GET VAO", _id);
-                            idLap = _id;
+
+                            idLapJoin = _id;
+                            idLapDelete = "";
                             break;
                         }
                     }
 
                     Player player = PlayGame.otherPlayers.get(_id);
-                    if (player != null && vt!=-1)
+                    if (player != null && vt!=-1){
+
                         playerInRoom.put(vt, player);
+
+                        //addLabel
+                       /* stage.addActor(lblNameOther[vt-1]);
+                        stage.addActor(lblCoinOther[vt-1]);*/
+                       // Gdx.app.log("SHOW",lblNameOther[vt-1]+"");
+
+                    }
+
+
 
 
 
@@ -337,6 +368,9 @@ public class Room extends AbstractScreen {
         }).on("getRoomActive", new Emitter.Listener() {
             @Override
             public void call(Object... args) {
+                for(int i =0;i<player.length;i++)
+                    player[i] = false;
+                playerInRoom = new HashMap<>();
                 JSONArray array = (JSONArray) args[0];
                 if(array.length()<1)
                     return;
@@ -352,17 +386,29 @@ public class Room extends AbstractScreen {
                         Gdx.app.log("LOI_GET_PLAYER_IN_ROOM", e.toString());
                     }
                 }
+               // addLabel();
+                for(int i =0;i<6;i++){
+                    if(playerInRoom.containsKey(i+1)){
+                        stage.addActor(lblCoinOther[i]);
+                        stage.addActor(lblNameOther[i]);
+                    }
+                }
 
 
 
             }
 
         }).on("OutChungRoom", new Emitter.Listener() {
+
             @Override
             public void call(Object... args) {
+
                 JSONObject data = (JSONObject) args[0];
                 try {
                     String _id = data.getString("id");
+                    if(_id.equals(idLapDelete))
+                        return;
+                    idLapJoin ="";
                     deletePlayer(_id);
                 } catch (JSONException e) {
                     Gdx.app.log("LOIOUTROOM", e.toString());
@@ -422,7 +468,7 @@ public class Room extends AbstractScreen {
             public void call(Object... args) {
 
                 JSONObject data = (JSONObject) args[0];
-                Gdx.app.log("LOI_CLIENT_DAT_COIN","22");
+               // Gdx.app.log("LOI_CLIENT_DAT_COIN","22");
                 try {
                     int sttlbl = data.getInt("sttThu");
                     int _coin = data.getInt("coin");
@@ -449,10 +495,34 @@ public class Room extends AbstractScreen {
     @Override
     public void render(float dt) {
         super.render(dt);
+        if(EVENT!=1)
+             stage.clear();
+        stage.addActor(lblCoin);
+        stage.addActor(lblName);
+        stage.addActor(lblTime);
+        stage.addActor(lblRoom);
+        stage.addActor(bar);
+
+        for(int i =0;i<lblCountCoin.size;i++){
+            stage.addActor(lblCountCoin.get(i));
+
+        }
+        for(int i =1;i<=playerInRoom.size() -1;i++){
+            for(int j =i+1;i<=playerInRoom.size();j++){
+                try {
+                    if(playerInRoom.get(i).getId().equals(playerInRoom.get(j).getId())){
+                        playerInRoom.remove(i);
+                    }
+                }
+                catch (Exception e){
+                    playerInRoom.remove(i);
+                }
+            }
+        }
         //camera
         camera.update();
         game.batch.setProjectionMatrix(camera.combined);
-
+        //Gdx.app.log("adss",playerInRoom.size()+"");
         //
         Gdx.gl.glClearColor(1, 1, 1, 1);// xoá mh
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
@@ -600,12 +670,12 @@ public class Room extends AbstractScreen {
                 Gdx.app.log("LOI_DONGBOCOIN",e.toString());
             }
             //cập nhật coin
-            for(int i =0;i<playerInRoom.size();i++){
+           /* for(int i =0;i<playerInRoom.size();i++){
                 if(lblCoinOther[i] ==null)
                     continue;
                 lblCoinOther[i].setText(chuyeDoiTien(playerInRoom.get(i+1).getCoin()));
 
-            }
+            }*/
             //save data
             PlayGame.pres.putLong("coin",PlayGame.currentPlayer.getCoin());
             PlayGame.pres.flush();
@@ -701,7 +771,7 @@ public class Room extends AbstractScreen {
         if(EVENT ==2 && toast!=null){
             toast.render(dt);
         }
-        addLabel();
+
 
     }
 
@@ -744,34 +814,81 @@ public class Room extends AbstractScreen {
     }
 
     private void createAvatar() {
-        Texture player = Main.manager.get("avt.png", Texture.class);
+       /// Texture player = Main.manager.get("avatar/avt.png", Texture.class);
         int x = 10, y = 240;
+        try {
+            if (playerInRoom.containsKey(1)) {
+                int _avt = playerInRoom.get(1).getAvatar();
+                game.batch.draw(PlayGame.arrayAvtFull.get(_avt), x, y, 100, 100);
 
-        if (playerInRoom.containsKey(1)) {
-            game.batch.draw(player, x, y, 100, 100);
+
+                lblNameOther[0].setText(playerInRoom.get(1).getName());
+                lblCoinOther[0].setText(chuyeDoiTien( playerInRoom.get(1).getCoin()));
+
+           /* if(playerInRoom.containsKey(1) && !stage.getActors().contains(lblCoinOther[0],false))
+                Gdx.app.log("SHOWW", stage.getActors().contains(lblCoinOther[0],false)+"");*/
+
+
+
+            }
+
+            if (playerInRoom.containsKey(2)) {
+                int _avt = playerInRoom.get(2).getAvatar();
+                game.batch.draw(PlayGame.arrayAvtFull.get(_avt), x, y + 150, 100, 100);
+                lblNameOther[1].setText(playerInRoom.get(2).getName());
+                lblCoinOther[1].setText(chuyeDoiTien(playerInRoom.get(2).getCoin())+"");
+
+
+
+
+            }
+
+            if (playerInRoom.containsKey(3)) {
+                int _avt = playerInRoom.get(3).getAvatar();
+                game.batch.draw(PlayGame.arrayAvtFull.get(_avt), x, y + 300, 100, 100);
+                lblNameOther[2].setText(playerInRoom.get(3).getName());
+                lblCoinOther[2].setText(chuyeDoiTien(playerInRoom.get(3).getCoin())+"");
+
+            }
+
+            if (playerInRoom.containsKey(4)) {
+                x = Main.APP_WIDTH - 105;
+                int _avt = playerInRoom.get(4).getAvatar();
+                game.batch.draw(PlayGame.arrayAvtFull.get(_avt), x, y, 100, 100);
+                lblNameOther[3].setText(playerInRoom.get(4).getName());
+                lblCoinOther[3].setText(chuyeDoiTien(playerInRoom.get(4).getCoin())+"");
+
+            }
+
+            if (playerInRoom.containsKey(5)) {
+                x = Main.APP_WIDTH - 105;
+                int _avt = playerInRoom.get(5).getAvatar();
+                game.batch.draw(PlayGame.arrayAvtFull.get(_avt), x, y + 150, 100, 100);
+                lblNameOther[4].setText(playerInRoom.get(5).getName());
+                lblCoinOther[4].setText(chuyeDoiTien(playerInRoom.get(5).getCoin())+"");
+
+            }
+
+            if (playerInRoom.containsKey(6)) {
+                x = Main.APP_WIDTH - 105;
+                int _avt = playerInRoom.get(6).getAvatar();
+                game.batch.draw(PlayGame.arrayAvtFull.get(_avt), x, y + 300, 100, 100);
+                lblNameOther[5].setText(playerInRoom.get(6).getName());
+                lblCoinOther[5].setText(chuyeDoiTien(playerInRoom.get(6).getCoin())+"");
+
+            }
+        }
+        catch (Exception e){
+            Gdx.app.log("LOI_SETNAME",e.toString());
         }
 
-        if (playerInRoom.containsKey(2)) {
-            game.batch.draw(player, x, y + 150, 100, 100);
-        }
-
-        if (playerInRoom.containsKey(3)) {
-            game.batch.draw(player, x, y + 300, 100, 100);
-        }
-
-        if (playerInRoom.containsKey(4)) {
-            x = Main.APP_WIDTH - 105;
-            game.batch.draw(player, x, y, 100, 100);
-        }
-
-        if (playerInRoom.containsKey(5)) {
-            x = Main.APP_WIDTH - 105;
-            game.batch.draw(player, x, y + 150, 100, 100);
-        }
-
-        if (playerInRoom.containsKey(6)) {
-            x = Main.APP_WIDTH - 105;
-            game.batch.draw(player, x, y + 300, 100, 100);
+       // Gdx.app.log("SHOWW", stage.getActors().contains(lblCoinOther[0],false)+"");
+        for(int i =0;i<6;i++){
+            if(playerInRoom.containsKey(i+1) && !stage.getActors().contains(lblCoinOther[i],false)){
+              //  Gdx.app.log("SHOWW", stage.getActors().contains(lblCoinOther[0],true)+"");
+                stage.addActor(lblCoinOther[i]);
+                stage.addActor(lblNameOther[i]);
+            }
         }
 
 
@@ -779,89 +896,91 @@ public class Room extends AbstractScreen {
 
     private void addLabel() {
 
+
+        //label name and coin player in room
+        lblNameOther = new Label[6];
+        lblCoinOther = new Label[6];
+        //name and coin player
         int x = 10, y = 240;
         Label.LabelStyle font = new Label.LabelStyle(Main.myFont_24, Color.WHITE);
-        if (playerInRoom.containsKey(1) && lblNameOther[0] == null) {
-            //name
-            lblNameOther[0] = new Label(playerInRoom.get(1).getName(), font);
-            lblNameOther[0].setPosition(x + 50 - lblNameOther[0].getWidth() / 2, y - 30);
-            //coin
-            lblCoinOther[0] = new Label(chuyeDoiTien(playerInRoom.get(1).getCoin()),font);
-            lblCoinOther[0].setPosition(x + 50 - lblCoinOther[0].getWidth() / 2, y - 52);
 
-            stage.addActor(lblCoinOther[0]);
-            stage.addActor(lblNameOther[0]);
-            Gdx.app.log("NAMEEE",lblNameOther[0].getText().toString());
-        }
-        if (playerInRoom.containsKey(2) && lblNameOther[1] == null) {
-            lblNameOther[1] = new Label(playerInRoom.get(2).getName(), font);
-            lblNameOther[1].setPosition(x + 50 - lblNameOther[1].getWidth() / 2, y - 30 + 150);
-            //
-            //coin
-            lblCoinOther[1] = new Label(chuyeDoiTien(playerInRoom.get(2).getCoin()),font);
-            lblCoinOther[1].setPosition(x + 50 - lblCoinOther[0].getWidth() / 2, y +98);
 
-            stage.addActor(lblCoinOther[1]);
-            stage.addActor(lblNameOther[1]);
-        }
-        if (playerInRoom.containsKey(3) && lblNameOther[2] == null) {
-            lblNameOther[2] = new Label(playerInRoom.get(3).getName(), font);
-            lblNameOther[2].setPosition(x + 50 - lblNameOther[2].getWidth() / 2, y - 30 + 300);
-            //
-            //coin
-            lblCoinOther[2] = new Label(chuyeDoiTien(playerInRoom.get(3).getCoin()),font);
-            lblCoinOther[2].setPosition(x + 50 - lblCoinOther[0].getWidth() / 2, y +248);
+        //name
+        lblNameOther[0] = new Label("Giang", font);
+        lblNameOther[0].setPosition(x + 50 - lblNameOther[0].getWidth() / 2, y - 30);
+        //coin
+        lblCoinOther[0] = new Label("200M",font);
+        lblCoinOther[0].setPosition(x + 50 - lblCoinOther[0].getWidth() / 2, y - 52);
 
-            stage.addActor(lblCoinOther[2]);
-            stage.addActor(lblNameOther[2]);
-        }
-        if (playerInRoom.containsKey(4) && lblNameOther[3] == null) {
-            x = Main.APP_WIDTH - 105;
-            lblNameOther[3] = new Label(playerInRoom.get(4).getName(), font);
-            lblNameOther[3].setPosition(x + 50 - lblNameOther[3].getWidth() / 2, y - 30);
-            //
-            //coin
-            lblCoinOther[3] = new Label(chuyeDoiTien(playerInRoom.get(4).getCoin()),font);
-            lblCoinOther[3].setPosition(x + 50 - lblCoinOther[0].getWidth() / 2, y -52);
-            //
-            stage.addActor(lblCoinOther[3]);
-            stage.addActor(lblNameOther[3]);
-        }
-        if (playerInRoom.containsKey(5) && lblNameOther[4] == null) {
-            x = Main.APP_WIDTH - 105;
-            lblNameOther[4] = new Label(playerInRoom.get(5).getName(), font);
-            lblNameOther[4].setPosition(x + 50 - lblNameOther[4].getWidth() / 2, y - 30 + 150);
-            //
-            //coin
-            lblCoinOther[4] = new Label(chuyeDoiTien(playerInRoom.get(5).getCoin()),font);
-            lblCoinOther[4].setPosition(x + 50 - lblCoinOther[0].getWidth() / 2, y +98);
-            //
-            stage.addActor(lblCoinOther[4]);
-            stage.addActor(lblNameOther[4]);
-        }
-        if (playerInRoom.containsKey(6) && lblNameOther[5] == null) {
-            x = Main.APP_WIDTH - 105;
-            lblNameOther[5] = new Label(playerInRoom.get(6).getName(), font);
-            lblNameOther[5].setPosition(x + 50 - lblNameOther[5].getWidth() / 2, y - 30 + 300);
-            //
-            //coin
-            lblCoinOther[5] = new Label(chuyeDoiTien(playerInRoom.get(6).getCoin()),font);
-            lblCoinOther[5].setPosition(x + 50 - lblCoinOther[0].getWidth() / 2, y - 248);
-            //
-            stage.addActor(lblCoinOther[5]);
-            stage.addActor(lblNameOther[5]);
-        }
+
+
+
+
+        lblNameOther[1] = new Label("Giang", font);
+        lblNameOther[1].setPosition(x + 50 - lblNameOther[1].getWidth() / 2, y - 30 + 150);
+        //
+        //coin
+        lblCoinOther[1] = new Label("200M",font);
+        lblCoinOther[1].setPosition(x + 50 - lblCoinOther[0].getWidth() / 2, y +98);
+
+
+
+
+        lblNameOther[2] = new Label("Giang", font);
+        lblNameOther[2].setPosition(x + 50 - lblNameOther[2].getWidth() / 2, y - 30 + 300);
+        //
+        //coin
+        lblCoinOther[2] = new Label("200M",font);
+        lblCoinOther[2].setPosition(x + 50 - lblCoinOther[0].getWidth() / 2, y +248);
+
+
+
+
+        x = Main.APP_WIDTH - 105;
+        lblNameOther[3] = new Label("Giang", font);
+        lblNameOther[3].setPosition(x + 50 - lblNameOther[3].getWidth() / 2, y - 30);
+        //
+        //coin
+        lblCoinOther[3] = new Label("200M",font);
+        lblCoinOther[3].setPosition(x + 50 - lblCoinOther[0].getWidth() / 2, y -52);
+        //
+
+
+
+        x = Main.APP_WIDTH - 105;
+        lblNameOther[4] = new Label("Giang", font);
+        lblNameOther[4].setPosition(x + 50 - lblNameOther[4].getWidth() / 2, y - 30 + 150);
+        //
+        //coin
+        lblCoinOther[4] = new Label("200M",font);
+        lblCoinOther[4].setPosition(x + 50 - lblCoinOther[0].getWidth() / 2, y +98);
+        //
+
+
+
+        x = Main.APP_WIDTH - 105;
+        lblNameOther[5] = new Label("Giang", font);
+        lblNameOther[5].setPosition(x + 50 - lblNameOther[5].getWidth() / 2, y - 30 + 300);
+        //
+        //coin
+        lblCoinOther[5] = new Label("200M",font);
+        lblCoinOther[5].setPosition(x + 50 - lblCoinOther[0].getWidth() / 2, y - 248);
+        //
+
+
+
     }
 
 
     private void onClickOutRoom() {
-        Gdx.app.log("MH", "CHUYEN MH");
+
         //đồng bộ với server
         JSONObject data = new JSONObject();
         try {
             data.put("stt", PlayGame.currentPlayer.getRoom());
             data.put("id", PlayGame.currentPlayer.getId());
             PlayGame.socket.emit("out_room", data);
+         //   Gdx.app.log("MH", "CHUYEN MH");
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -895,80 +1014,77 @@ public class Room extends AbstractScreen {
     }
 
     private void deletePlayer(String id) {
+       // Gdx.app.log("TRUOCDELETE", playerInRoom.size()+"");
         if(id.equals(PlayGame.currentPlayer.getId()))
             return;
-        idLap = "";
-        try {
-            Gdx.app.log("TRUOCDELETE", playerInRoom.size()+"");
-            if (player[0] && id.equals(playerInRoom.get(1).getId())) {
-                //name
-                lblNameOther[0].remove();
-                lblNameOther[0] = null;
-                //coin
-                lblCoinOther[0].remove();
-                lblCoinOther[0] = null;
+
+       // Gdx.app.log("SHOWW", stage.getActors().contains(lblCoinOther[0],false)+"");
+        //try {
+
+            if (player[0] && playerInRoom.containsKey(1) &&id.equals(playerInRoom.get(1).getId())) {
+
+
+
                 player[0] = false;
                 playerInRoom.remove(1);
+                lblNameOther[0].setText("");
+
+
 
             }
-            if (player[1] && id.equals(playerInRoom.get(2).getId())) {
-                lblNameOther[1].remove();
-                lblNameOther[1] = null;
-                //
-                //coin
-                lblCoinOther[1].remove();
-                lblCoinOther[1] = null;
+
+        if (player[1] &&playerInRoom.containsKey(2)  &&id.equals(playerInRoom.get(2).getId())) {
+
                 player[1] = false;
                 playerInRoom.remove(2);
             }
-            if (player[2] && id.equals(playerInRoom.get(3).getId())) {
-                lblNameOther[2].remove();
-                lblNameOther[2] = null;
-                //
-                //coin
-                lblCoinOther[2].remove();
-                lblCoinOther[2] = null;
+            if (player[2] && playerInRoom.containsKey(3) && id.equals(playerInRoom.get(3).getId())) {
+
                 player[2] = false;
                 playerInRoom.remove(3);
             }
-            if (player[3] && id.equals(playerInRoom.get(4).getId())) {
-                lblNameOther[3].remove();
-                lblNameOther[3] = null;
-                //
-                //coin
-                lblCoinOther[3].remove();
-                lblCoinOther[3] = null;
+            if (player[3] &&playerInRoom.containsKey(4) && id.equals(playerInRoom.get(4).getId())) {
+
                 player[3] = false;
                 playerInRoom.remove(4);
             }
-            if (player[4] && id.equals(playerInRoom.get(5).getId())) {
-                lblNameOther[4].remove();
-                lblNameOther[4] = null;
-                //
-                //coin
-                lblCoinOther[4].remove();
-                lblCoinOther[4] = null;
+            if (player[4] &&playerInRoom.containsKey(5)&& id.equals(playerInRoom.get(5).getId())) {
+
                 player[4] = false;
                 playerInRoom.remove(5);
             }
-            if (player[5] && id.equals(playerInRoom.get(6).getId())) {
-                lblNameOther[5].remove();
-                lblNameOther[5] = null;
-                //coin
-                lblCoinOther[5].remove();
-                lblCoinOther[5] = null;
+            if (player[5] &&playerInRoom.containsKey(6)&& id.equals(playerInRoom.get(6).getId())) {
+
                 player[5] = false;
                 playerInRoom.remove(6);
             }
-        } catch (Exception e) {
+       /* } catch (Exception e) {
 
-            Gdx.app.log("SAUDELETE", playerInRoom.size()+"");
+            Gdx.app.log("LOI_DELETE", e.toString());
+        }*/
+        idLapDelete = id;
+       // Gdx.app.log("SAUDELETE", playerInRoom.size()+"";
+        stage.addActor(lblCoin);
+        stage.addActor(lblName);
+        stage.addActor(lblTime);
+        stage.addActor(lblRoom);
+        stage.addActor(bar);
+        for(int i =0;i<lblCountCoin.size;i++){
+            stage.addActor(lblCountCoin.get(i));
+            if(playerInRoom.containsKey(i+1)){
+                stage.addActor(lblCoinOther[i]);
+                stage.addActor(lblNameOther[i]);
+            }
         }
-        Gdx.app.log("SAUDELETE", playerInRoom.size()+"");
+
+
+
 
     }
 
     private void clickCoin() {
+        if(EVENT ==3)
+            return;
         if (Gdx.input.getX() * Main.SCALE_X < 670 && Gdx.input.getX() * Main.SCALE_X > 580 &&
                 Main.APP_HEIGHT - Gdx.input.getY() * Main.SCALE_Y < 97 && Main.APP_HEIGHT - Gdx.input.getY() * Main.SCALE_Y > 12) {
             if (Gdx.input.justTouched() && tgChoi) {
@@ -1079,7 +1195,7 @@ public class Room extends AbstractScreen {
         Texture imgKhung_avt = Main.manager.get("bauCua/khung_avt.png", Texture.class);
         Texture imgKhung = Main.manager.get("bauCua/khung.png", Texture.class);
         Texture imgKhung_coin = Main.manager.get("bauCua/khung_coin.png", Texture.class);
-        Texture avt = Main.manager.get("avt.png", Texture.class);
+      //  Texture avt = Main.manager.get("avt.png", Texture.class);
         Texture imgChat = Main.manager.get("bauCua/imgChat.png", Texture.class);
 
         game.batch.draw(imgBroad, 0, 110, Main.APP_WIDTH, Main.APP_HEIGHT - 110);
@@ -1103,7 +1219,7 @@ public class Room extends AbstractScreen {
         game.batch.draw(imgKhung, 0, 0, Main.APP_WIDTH, 110);
         game.batch.draw(imgKhung_avt, 180, 5, 250, 100);
         game.batch.draw(imgKhung_coin, 555, 5, 615, 100);
-        game.batch.draw(avt, 80, 5, 100, 100);
+        game.batch.draw(PlayGame.arrayAvtFull.get(PlayGame.avatarChoose), 80, 5, 100, 100);
 
         //vẽ coin
         game.batch.draw(arrTextureCoin.get(0), 580, 12, 90, 85);
@@ -1239,6 +1355,8 @@ public class Room extends AbstractScreen {
     }
 
     private void datCuoc() {
+        if(EVENT ==3)
+            return;
         int coinChoose = -1;
         for(int i=0;i< dk_click_coin.length;i++){
             if(dk_click_coin[i]){
@@ -1267,6 +1385,7 @@ public class Room extends AbstractScreen {
                 lblCountCoin.get(5).setText(chuyeDoiTien(coinNai+arrCoin[coinChoose]));
                 tienCuoc[5]+=arrCoin[coinChoose];
                 guiServerCoinDat(5,arrCoin[coinChoose]);
+                Main.manager.get("sound/sound_dat_coin.mp3", Sound.class).play();
 
             }
 
@@ -1288,6 +1407,7 @@ public class Room extends AbstractScreen {
                 lblCountCoin.get(4).setText(chuyeDoiTien(coinGa+arrCoin[coinChoose]));
                 tienCuoc[4]+=arrCoin[coinChoose];
                 guiServerCoinDat(4,arrCoin[coinChoose]);
+                Main.manager.get("sound/sound_dat_coin.mp3", Sound.class).play();
             }
 
         }
@@ -1308,6 +1428,7 @@ public class Room extends AbstractScreen {
                 lblCountCoin.get(0).setText(chuyeDoiTien(coinBau+arrCoin[coinChoose]));
                 tienCuoc[0]+=arrCoin[coinChoose];
                 guiServerCoinDat(0,arrCoin[coinChoose]);
+                Main.manager.get("sound/sound_dat_coin.mp3", Sound.class).play();
             }
 
         }
@@ -1328,6 +1449,7 @@ public class Room extends AbstractScreen {
                 lblCountCoin.get(3).setText(chuyeDoiTien(coinCa+arrCoin[coinChoose]));
                 tienCuoc[3]+=arrCoin[coinChoose];
                 guiServerCoinDat(3,arrCoin[coinChoose]);
+                Main.manager.get("sound/sound_dat_coin.mp3", Sound.class).play();
             }
 
         }
@@ -1348,6 +1470,7 @@ public class Room extends AbstractScreen {
                 lblCountCoin.get(1).setText(chuyeDoiTien(coinCua+arrCoin[coinChoose]));
                 tienCuoc[1]+=arrCoin[coinChoose];
                 guiServerCoinDat(1,arrCoin[coinChoose]);
+                Main.manager.get("sound/sound_dat_coin.mp3", Sound.class).play();
             }
 
         }
@@ -1368,6 +1491,7 @@ public class Room extends AbstractScreen {
                 lblCountCoin.get(2).setText(chuyeDoiTien(coinTom+arrCoin[coinChoose]));
                 tienCuoc[2]+=arrCoin[coinChoose];
                 guiServerCoinDat(2,arrCoin[coinChoose]);
+                Main.manager.get("sound/sound_dat_coin.mp3", Sound.class).play();
             }
 
         }
@@ -1537,7 +1661,7 @@ public class Room extends AbstractScreen {
         float coinNow = 0;
         if(_coin.length()>1)
                  coinNow =Float.parseFloat(_coin.substring(0,_coin.length()-1));
-        Gdx.app.log("COIi",coinNow+"");
+      //  Gdx.app.log("COIi",coinNow+"");
         if(donVi .equals("K")){
             return (long) (coinNow*1000);
         }

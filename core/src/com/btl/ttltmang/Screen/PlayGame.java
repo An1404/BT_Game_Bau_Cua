@@ -5,21 +5,31 @@ import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.ui.Button;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Align;
+import com.badlogic.gdx.utils.Array;
 import com.btl.ttltmang.Main;
 import com.btl.ttltmang.Object.Player;
 import com.btl.ttltmang.Tool.FormValidator;
-import com.btl.ttltmang.Tool.HttpManager;
 import com.btl.ttltmang.Tool.PagedScrollPane;
 import com.btl.ttltmang.Tool.Toast;
+import com.kotcrab.vis.ui.VisUI;
+import com.kotcrab.vis.ui.util.form.SimpleFormValidator;
+import com.kotcrab.vis.ui.widget.VisImageButton;
+import com.kotcrab.vis.ui.widget.VisValidatableTextField;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -54,10 +64,17 @@ public class PlayGame extends AbstractScreen {
     public static Preferences pres;
     //tạo room
     private Skin skin;
-    private Table container;
+    private Table tabelRoom;
     public static int room[];
     //
     private Texture imgLoad;
+    //avt
+    public static Array<Texture> arrayAvtFull;
+    public static Array<Texture> arrayAvt50;
+    public static Array<Texture> arrayAvtChecked;
+
+    public static  int avatarChoose =0;
+    private ImageButton btnDoiAvatar;
 
 
     public PlayGame(Main game) {
@@ -65,6 +82,9 @@ public class PlayGame extends AbstractScreen {
         toastFactory = new Toast.ToastFactory.Builder()
                 .font(Main.myFont)
                 .build();
+
+        //avt
+        loadAvatar();
 
 ;
 
@@ -78,20 +98,38 @@ public class PlayGame extends AbstractScreen {
         //nhập tt
         formInfor= new FormValidator();
         formInfor.setName("formInfor");
-        formInfor.setPosition(Main.APP_WIDTH/2-Main.APP_WIDTH/6,Main.APP_HEIGHT/2-Main.APP_HEIGHT/6);
+        formInfor.setPosition(Main.APP_WIDTH/2-Main.APP_WIDTH/7,Main.APP_HEIGHT/2-Main.APP_HEIGHT/5);
+
+        //dôi avt
+        btnDoiAvatar = new ImageButton(new TextureRegionDrawable(
+                new TextureRegion(Main.manager.get("doi_avt.png",Texture.class))));
+        btnDoiAvatar.setPosition(28,Main.APP_HEIGHT-145);
+        stage.addActor(btnDoiAvatar);
+        btnDoiAvatar.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                onClickChangeAvatar();
+            }
+        });
+        btnDoiAvatar.setVisible(false);
+
         //tạo database
         pres = Gdx.app.getPreferences("data");
         String _name = pres.getString("name","");
         if(_name.isEmpty() || _name ==null){
             stage.addActor(formInfor);
+
         }
         else{
             CLOSE_FORM = 1;
             USER_NAME = _name;
             String _phone = pres.getString("phone","");
             long _coin = pres.getLong("coin",2000000);
+            int _avt = pres.getInteger("avt");
             currentPlayer.setCoin(_coin);
+            currentPlayer.setAvatar(_avt);
             USER_PHONE = _phone;
+            avatarChoose = _avt;
         }
 
 
@@ -102,12 +140,270 @@ public class PlayGame extends AbstractScreen {
 
         // tạo câu chào
         toast = toastFactory.create("Chào mừng ########", Toast.Length.SHORT);
+        //tao tabel room
+        tabelRoom = new Table();
 
 
 
 
 
 
+
+
+
+    }
+
+    private void onClickChangeAvatar() {
+        tabelRoom.setVisible(false);
+        btnDoiAvatar.setVisible(false);
+        ImageButton btnClose = new ImageButton(new TextureRegionDrawable(
+                new TextureRegion(Main.manager.get("btn_exit.png",Texture.class))));
+        final Table table = new Table(VisUI.getSkin());
+        table.columnDefaults(0).left();
+        final VisValidatableTextField txtName = new VisValidatableTextField(currentPlayer.getName());
+        TextButton btnOK = new TextButton("OK",VisUI.getSkin());
+        Label errorLabel = new Label("",VisUI.getSkin());
+        errorLabel.setColor(Color.RED);
+        SimpleFormValidator validator;
+        validator = new SimpleFormValidator(btnOK, errorLabel, "smooth");
+
+        final Array<VisImageButton> btnImgAvatar = new Array<>();
+        for(int i=0;i<8;i++){
+            VisImageButton.VisImageButtonStyle styles = new VisImageButton.VisImageButtonStyle();
+            styles.imageChecked = new TextureRegionDrawable(new TextureRegion(PlayGame.arrayAvtChecked.get(i)));
+            styles.imageUp = new TextureRegionDrawable(new TextureRegion(PlayGame.arrayAvt50.get(i)));
+            // style.add(styles);
+            VisImageButton img_avt = new VisImageButton(styles);
+            btnImgAvatar.add(img_avt);
+
+        }
+        Label.LabelStyle lblStyle = new Label.LabelStyle(Main.myFont_24,Color.WHITE);
+        table.add(new Label("Thông Tin",lblStyle)).colspan(4).center();
+        table.add(btnClose);
+        table.row();
+        for(int i =0;i<8;i++){
+            table.add(btnImgAvatar.get(i)).pad(5);
+            if(i==3)
+                table.row();
+
+        }
+        table.row();
+        table.add(new Label("Name:",VisUI.getSkin())).bottom();
+        table.add(txtName).padTop(10).fill().colspan(3);
+        table.row();
+        table.add(errorLabel).fill().colspan(3).padTop(10);
+        table.add(btnOK).right().padTop(10);
+
+
+        validator.notEmpty(txtName, "Name cannot be empty");
+
+
+        //table.background(new TextureRegionDrawable(new TextureRegion(Main.manager.get("test.png",Texture.class))));
+        table.setPosition(Main.APP_WIDTH/2-140,Main.APP_HEIGHT/2-105);
+        table.setSize(280,210);
+        stage.addActor(table);
+
+
+        final int[] soAvt = {avatarChoose};
+
+        btnImgAvatar.get(avatarChoose).setChecked(true);
+        btnImgAvatar.get(0).addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                if(soAvt[0] == 0)
+                    return;
+
+                btnImgAvatar.get(soAvt[0]).setChecked(false);
+                btnImgAvatar.get(0).setChecked(true);
+                soAvt[0] = 0;
+            }
+        });
+
+        btnImgAvatar.get(1).addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                if(soAvt[0] == 1)
+                    return;
+
+
+                btnImgAvatar.get(soAvt[0]).setChecked(false);
+                btnImgAvatar.get(1).setChecked(true);
+                soAvt[0] = 1;
+            }
+        });
+
+        btnImgAvatar.get(2).addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                if(soAvt[0] == 2)
+                    return;
+
+                btnImgAvatar.get(soAvt[0]).setChecked(false);
+                btnImgAvatar.get(2).setChecked(true);
+                soAvt[0] = 2;
+            }
+        });
+
+        btnImgAvatar.get(3).addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                if(soAvt[0] == 3)
+                    return;
+
+
+                btnImgAvatar.get(soAvt[0]).setChecked(false);
+                btnImgAvatar.get(3).setChecked(true);
+                soAvt[0] = 3;
+            }
+        });
+
+        btnImgAvatar.get(5).addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                if(soAvt[0] == 5)
+                    return;
+
+                btnImgAvatar.get(soAvt[0]).setChecked(false);
+                btnImgAvatar.get(5).setChecked(true);
+                soAvt[0] = 5;
+            }
+        });
+
+        btnImgAvatar.get(6).addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                if(soAvt[0] == 6)
+                    return;
+
+                btnImgAvatar.get(soAvt[0]).setChecked(false);
+                btnImgAvatar.get(6).setChecked(true);
+                soAvt[0] = 6;
+            }
+        });
+
+        btnImgAvatar.get(7).addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                if(soAvt[0] == 7)
+                    return;
+
+                btnImgAvatar.get(soAvt[0]).setChecked(false);
+                btnImgAvatar.get(7).setChecked(true);
+                soAvt[0] = 7;
+            }
+        });
+
+        btnImgAvatar.get(4).addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                if(soAvt[0] == 4)
+                    return;
+
+                btnImgAvatar.get(soAvt[0]).setChecked(false);
+                btnImgAvatar.get(4).setChecked(true);
+                soAvt[0] = 4;
+            }
+        });
+
+        btnClose.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                table.remove();
+                table.remove();
+                tabelRoom.setVisible(true);
+                btnDoiAvatar.setVisible(true);
+            }
+        });
+
+
+
+        btnOK.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                table.remove();
+                tabelRoom.setVisible(true);
+                btnDoiAvatar.setVisible(true);
+                avatarChoose = soAvt[0];
+                currentPlayer.setName(txtName.getText().trim());
+                lblName.setText(txtName.getText().trim());
+                //luu tt lại ở local
+                pres.putString("name",txtName.getText().trim());
+                pres.putInteger("avt",avatarChoose);
+                pres.flush();
+
+                //đồng bộ với server
+                JSONObject data = new JSONObject();
+                try {
+                    data.put("name",txtName.getText().trim());
+                    data.put("id",currentPlayer.getId());
+                    data.put("avt",avatarChoose);
+                    socket.emit("doi_thong_tin",data);
+
+                } catch (JSONException e) {
+                   Gdx.app.log("LOI_DOI_AVT",e.toString());
+                }
+
+
+            }
+        });
+
+
+    }
+
+    private void loadAvatar() {
+        Texture img = Main.manager.get("avatar/avt_50.png",Texture.class);
+        Texture img_checked = Main.manager.get("avatar/avt_checked.png",Texture.class);
+        Texture img2 = Main.manager.get("avatar/avt2_50.png",Texture.class);
+        Texture img2_checked = Main.manager.get("avatar/avt2_checked.png",Texture.class);
+        Texture img3 = Main.manager.get("avatar/avt3_50.png",Texture.class);
+        Texture img3_checked = Main.manager.get("avatar/avt3_checked.png",Texture.class);
+        Texture img4 = Main.manager.get("avatar/avt4_50.png",Texture.class);
+        Texture img4_checked = Main.manager.get("avatar/avt4_checked.png",Texture.class);
+        Texture img5 = Main.manager.get("avatar/avt5_50.png",Texture.class);
+        Texture img5_checked = Main.manager.get("avatar/avt5_checked.png",Texture.class);
+        Texture img6 = Main.manager.get("avatar/avt6_50.png",Texture.class);
+        Texture img6_checked = Main.manager.get("avatar/avt6_checked.png",Texture.class);
+        Texture img7 = Main.manager.get("avatar/avt7_50.png",Texture.class);
+        Texture img7_checked = Main.manager.get("avatar/avt7_checked.png",Texture.class);
+        Texture img8 = Main.manager.get("avatar/avt8_50.png",Texture.class);
+        Texture img8_checked = Main.manager.get("avatar/avt8_checked.png",Texture.class);
+        Texture img11 = Main.manager.get("avatar/avt.png",Texture.class);
+        Texture img22 = Main.manager.get("avatar/avt2.png",Texture.class);
+        Texture img33 = Main.manager.get("avatar/avt3.png",Texture.class);
+        Texture img44 = Main.manager.get("avatar/avt4.png",Texture.class);
+        Texture img55 = Main.manager.get("avatar/avt5.png",Texture.class);
+        Texture img66 = Main.manager.get("avatar/avt6.png",Texture.class);
+        Texture img77 = Main.manager.get("avatar/avt7.png",Texture.class);
+        Texture img88 = Main.manager.get("avatar/avt8.png",Texture.class);
+        arrayAvtFull = new Array<>();
+        arrayAvtFull.add(img11);
+        arrayAvtFull.add(img22);
+        arrayAvtFull.add(img33);
+        arrayAvtFull.add(img44);
+        arrayAvtFull.add(img55);
+        arrayAvtFull.add(img66);
+        arrayAvtFull.add(img77);
+        arrayAvtFull.add(img88);
+
+        arrayAvt50 = new Array<>();
+        arrayAvt50.add(img);
+        arrayAvt50.add(img2);
+        arrayAvt50.add(img3);
+        arrayAvt50.add(img4);
+        arrayAvt50.add(img5);
+        arrayAvt50.add(img6);
+        arrayAvt50.add(img7);
+        arrayAvt50.add(img8);
+
+        arrayAvtChecked = new Array<>();
+        arrayAvtChecked.add(img_checked);
+        arrayAvtChecked.add(img2_checked);
+        arrayAvtChecked.add(img3_checked);
+        arrayAvtChecked.add(img4_checked);
+        arrayAvtChecked.add(img5_checked);
+        arrayAvtChecked.add(img6_checked);
+        arrayAvtChecked.add(img7_checked);
+        arrayAvtChecked.add(img8_checked);
 
     }
 
@@ -118,6 +414,7 @@ public class PlayGame extends AbstractScreen {
             createLobby();
             stage.addActor(lblCoin);
             stage.addActor(lblName);
+            stage.addActor(btnDoiAvatar);
 
         }
 
@@ -171,8 +468,13 @@ public class PlayGame extends AbstractScreen {
                 game.batch.draw(imgLoad,Main.APP_WIDTH/2-250,Main.APP_HEIGHT/2-100,500,200);
             //updateServer(delta);
             createLobby();
-             lblCoin.setText(currentPlayer.getCoin()+"");
+             lblCoin.setText("$" + chuyeDoiTien(currentPlayer.getCoin()));
         }
+        if(!tabelRoom.isVisible())
+            game.batch.draw(Main.manager.get("khung_doi_avt.png",Texture.class),
+                    Main.APP_WIDTH/2-155,Main.APP_HEIGHT/2-95,260,212);
+
+
 
 
         game.batch.end();
@@ -182,11 +484,15 @@ public class PlayGame extends AbstractScreen {
         stage.act(delta);
         stage.draw();
 
-        new HttpManager();
+       /* new HttpManager();
         if(HttpManager.LOI==1){
             createToast(delta);
 
-        }
+        }*/
+        /*if(!socket.connected())
+            createToast(delta);
+        Gdx.app.log("CHECK",socket.connected()+"");*/
+
         if(CLOSE_FORM == 4){
             toast.render(delta);
             if(mTime>5){
@@ -208,12 +514,14 @@ public class PlayGame extends AbstractScreen {
 
 
     }
+
+
     //xử lý coin
     @Override
     public void dispose() {
         super.dispose();
         stage.clear();
-        Gdx.app.log("OUT","!123");
+       // Gdx.app.log("OUT","!123");
         pres.putLong("coin", currentPlayer.getCoin());
         pres.flush();
     }
@@ -236,6 +544,7 @@ public class PlayGame extends AbstractScreen {
             return;
         }
         if(mTime==0f ){
+
             toast.setMsg("Chào mừng "+USER_NAME);
             formInfor.remove();
             // kết nối tới server
@@ -258,7 +567,7 @@ public class PlayGame extends AbstractScreen {
             skin.add("top", skin.newDrawable("default-round", Color.RED), Drawable.class);
             skin.add("star-filled", skin.newDrawable("white", Color.YELLOW), Drawable.class);
             skin.add("star-unfilled", skin.newDrawable("white", Color.GRAY), Drawable.class);
-            container = new Table();
+
 
         }
         CLOSE_FORM = 3;
@@ -269,7 +578,7 @@ public class PlayGame extends AbstractScreen {
 
     private void ConnectSocket() {
         try {
-            socket = IO.socket("https://safe-citadel-28701.herokuapp.com/");
+            socket = IO.socket("https://server-gamebaucua.herokuapp.com/");
             socket.connect();
 
         } catch(Exception e){
@@ -282,12 +591,7 @@ public class PlayGame extends AbstractScreen {
     }
 
     private void ConfigSocket() {
-       socket.on(Socket.EVENT_CONNECT, new Emitter.Listener() {
-           @Override
-           public void call(Object... args) {
-
-           }
-       }).on("socketID", new Emitter.Listener() {
+       socket.on("socketID", new Emitter.Listener() {
             @Override
             public void call(Object... args) {
                 JSONObject object = (JSONObject) args[0];
@@ -298,12 +602,13 @@ public class PlayGame extends AbstractScreen {
                     currentPlayer.setName(USER_NAME);
                     currentPlayer.setPhone(USER_PHONE);
                     currentPlayer.setRoom(0);
-                    Gdx.app.log("socketID",id);
+                    //Gdx.app.log("socketID",id);
                     //lưu vào database
                     pres.putString("id",currentPlayer.getId());
                     pres.putString("name",USER_NAME);
                     pres.putString("phone",USER_PHONE);
                     pres.putLong("coin",currentPlayer.getCoin());
+                    pres.putInteger("avt",avatarChoose);
                     pres.flush();
 
                     //put player lên server
@@ -314,6 +619,7 @@ public class PlayGame extends AbstractScreen {
                         data.put("phone",USER_PHONE);
                         data.put("coin",currentPlayer.getCoin());
                         data.put("room",currentPlayer.getRoom());
+                        data.put("avt",avatarChoose);
                         socket.emit("info_players",data);
 
                     }
@@ -337,9 +643,10 @@ public class PlayGame extends AbstractScreen {
                     String _name = object.getString("name");
                     long _coin = object.getLong("coin");
                     int _room = object.getInt("room");
-                    Player player = new Player(_id,_name,_room,_coin);
+                    int _avt = object.getInt("avt");
+                    Player player = new Player(_id,_name,_room,_coin,_avt);
                     otherPlayers.put(_id,player);
-                    Gdx.app.log("newPlayer ID",_coin+"");
+                   // Gdx.app.log("newPlayer ID",_coin+"");
                 }
                 catch (JSONException e){
                     Gdx.app.log("LOI_info_players",e.toString());
@@ -357,7 +664,9 @@ public class PlayGame extends AbstractScreen {
                         String _name = object.getString("name");
                         String _phone = object.getString("phone");
                         long _coin = object.getLong("coin");
-                        Player otherPlayer = new Player(_id,_name,_phone,_coin);
+                        int _room = object.getInt("room");
+                        int _avt = object.getInt("avt");
+                        Player otherPlayer = new Player(_id,_name,_phone,_room,_coin,_avt);
                         otherPlayers.put(_id,otherPlayer);
                         Gdx.app.log("LOI_getPlayer",_coin+"");
 
@@ -381,6 +690,7 @@ public class PlayGame extends AbstractScreen {
                    //tạo room
                    createRoom(0);
                    room[0] = 11;
+                   btnDoiAvatar.setVisible(true);
                }
                catch (Exception e){
                    Gdx.app.log("LOI_getRoom",e.toString());
@@ -399,7 +709,7 @@ public class PlayGame extends AbstractScreen {
                } catch (JSONException e) {
                    Gdx.app.log("LOI_JOINROOM",e.toString());
                }
-               Gdx.app.log("ROOM 1",room[1]+"");
+               //Gdx.app.log("ROOM 1",room[1]+"");
            }
        }).on("out_room", new Emitter.Listener() {
            @Override
@@ -422,7 +732,7 @@ public class PlayGame extends AbstractScreen {
                } catch (JSONException e) {
                    Gdx.app.log("LOI_OUTROOM",e.toString());
                }
-               Gdx.app.log("ROOM 1",room[1]+"");
+              // Gdx.app.log("ROOM 1",room[1]+"");
            }
        }).on("dongbocoin", new Emitter.Listener() {
            @Override
@@ -443,9 +753,26 @@ public class PlayGame extends AbstractScreen {
 
 
 
-               } catch (JSONException e) {
+               } catch (Exception e) {
                    Gdx.app.log("LOI_CLIENT_DONG_BO_COIN",e.toString());
                }
+           }
+       }).on("doi_thong_tin", new Emitter.Listener() {
+           @Override
+           public void call(Object... args) {
+               JSONObject data = (JSONObject) args[0];
+               try {
+                   String _name = data.getString("name");
+                   int _avt = data.getInt("avt");
+                   String _id = data.getString("id");
+                   for(int i =0;i<otherPlayers.size();i++){
+                       otherPlayers.get(_id).setAvatar(_avt);
+                       otherPlayers.get(_id).setName(_name);
+                   }
+               } catch (JSONException e) {
+                   Gdx.app.log("LOI_DOITT",e.toString());
+               }
+
            }
        }).on("playerDisconnect", new Emitter.Listener() {
            @Override
@@ -473,13 +800,13 @@ public class PlayGame extends AbstractScreen {
     private void createLobby() {
         game.batch.setProjectionMatrix(camera.combined);
         //vẽ avt
-        Texture avt=  Main.manager.<Texture>get("avt.png",com.badlogic.gdx.graphics.Texture .class);
+       // Texture avt=  Main.manager.<Texture>get("avt.png",com.badlogic.gdx.graphics.Texture .class);
         Texture imgKhung = Main.manager.get("imageLobby/khung.png",Texture.class);
-        game.batch.draw(avt,0 ,Main.APP_HEIGHT - Main.APP_HEIGHT/6,Main.APP_HEIGHT/10,Main.APP_HEIGHT/10);
+        game.batch.draw(arrayAvtFull.get(avatarChoose),5 ,Main.APP_HEIGHT - 110,Main.APP_HEIGHT/10,Main.APP_HEIGHT/10);
         if(currentPlayer.getCoin()<=100000000)
-            game.batch.draw(imgKhung,Main.APP_HEIGHT/10+5 ,Main.APP_HEIGHT - 2*Main.APP_HEIGHT/10,Main.APP_HEIGHT/4,Main.APP_HEIGHT/10+Main.APP_HEIGHT/20);
+            game.batch.draw(imgKhung,Main.APP_HEIGHT/10+10 ,Main.APP_HEIGHT - 2*Main.APP_HEIGHT/10,Main.APP_HEIGHT/4,Main.APP_HEIGHT/10+Main.APP_HEIGHT/20);
         else
-            game.batch.draw(imgKhung,Main.APP_HEIGHT/10+5 ,Main.APP_HEIGHT - 2*Main.APP_HEIGHT/10,Main.APP_HEIGHT/3,Main.APP_HEIGHT/10+Main.APP_HEIGHT/20);
+            game.batch.draw(imgKhung,Main.APP_HEIGHT/10+10 ,Main.APP_HEIGHT - 2*Main.APP_HEIGHT/10,Main.APP_HEIGHT/3,Main.APP_HEIGHT/10+Main.APP_HEIGHT/20);
     }
 
     private String chuyeDoiTien(long tien) {
@@ -533,11 +860,11 @@ public class PlayGame extends AbstractScreen {
             scroll.addPage(levels);
         }
         if(dk !=0)
-            container.remove();
-        container.clear();
-        stage.addActor(container);
-        container.setFillParent(true);
-        container.add(scroll).expand().padTop(Main.APP_HEIGHT/5).fill();
+            tabelRoom.remove();
+        tabelRoom.clear();
+        stage.addActor(tabelRoom);
+        tabelRoom.setFillParent(true);
+        tabelRoom.add(scroll).expand().padTop(Main.APP_HEIGHT/5).fill();
 
     }
 
@@ -576,7 +903,7 @@ public class PlayGame extends AbstractScreen {
     public ClickListener levelClickListener = new ClickListener() {
         @Override
         public void clicked (InputEvent event, float x, float y) {
-            Gdx.app.log("Click: " , event.getListenerActor().getName());
+           // Gdx.app.log("Click: " , event.getListenerActor().getName());
             int soRoom = Integer.parseInt(event.getListenerActor().getName());
             if(room[soRoom]>=7){
                 toast = toastFactory.create("Phòng đã đầy", Toast.Length.LONG);
@@ -605,19 +932,5 @@ public class PlayGame extends AbstractScreen {
     };
 
 
-    private void updateServer(float delta) {
-        mTime += delta;
-        /*if(mTime >= UPDATE_TIME && currentPlayer !=null){
-            JSONObject data = new JSONObject();
-            try{
-                //data.put("id")
-                socket.emit("update",data);
 
-            }
-            catch (JSONException e){
-
-            }
-        }*/
-
-    }
 }

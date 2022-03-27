@@ -20,6 +20,11 @@ import com.btl.ttltmang.Main;
 import com.btl.ttltmang.Tool.HttpManager;
 import com.btl.ttltmang.Tool.Toast;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
+
 public class MhLogin extends AbstractScreen{
     private Texture btnChoi;
     private Texture btnOnChoi;
@@ -81,10 +86,13 @@ public class MhLogin extends AbstractScreen{
         game.batch.begin();
         game.batch.draw(imgBackground,0,0,Main.APP_WIDTH,Main.APP_HEIGHT);
         game.batch.draw(imgLogo,Main.APP_WIDTH/2-150,Main.APP_HEIGHT/2,300,300);
-        new HttpManager();
+        /*new HttpManager();
         if(HttpManager.LOI ==1){
             createToast(delta);
-        }
+        }*/
+
+
+
         game.batch.setProjectionMatrix(camera.combined);
         float x = BUTTON_X;
         if (Gdx.input.getX()*Main.SCALE_X< x+BUTTON_WIDTH && Gdx.input.getX()*Main.SCALE_X>x && Main.APP_HEIGHT-Gdx.input.getY()*Main.SCALE_Y<BUTTON_HEIGHT+BUTTON_PLAY_Y&&
@@ -117,6 +125,7 @@ public class MhLogin extends AbstractScreen{
 
 
     }
+
 
     private void createToast(float delta) {
         game.batch.setProjectionMatrix(camera.combined);

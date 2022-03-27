@@ -8,7 +8,7 @@ import com.btl.ttltmang.Main;
 public class DesktopLauncher {
 	public static void main (String[] arg) {
 		LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
-		config.width = Main.APP_WIDTH;
+		config.width =Main.APP_WIDTH;
 		config.height = Main.APP_HEIGHT;//445
 		config.title = Main.TITLE;
 		config.resizable = false;
